@@ -1,6 +1,6 @@
-num1 = int(input("First number: "))
+num1 = float(input("First number: "))
 operator = input("Choose +, -, *, / : ")
-num2 = int(input("Second number: "))
+num2 = float(input("Second number: "))
 
 if operator == "+":
     print(num1 + num2)
