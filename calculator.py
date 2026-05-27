@@ -1,18 +1,51 @@
-num1 = float(input("First number: "))
-operator = input("Choose +, -, *, / : ")
-num2 = float(input("Second number: "))
+def calculator():
 
-if operator == "+":
-    print(num1 + num2)
+    print("\n--- Simple Calculator ---")
 
-elif operator == "-":
-    print(num1 - num2)
+    try:
+        num1 = float(input("First number: "))
+        operator = input("Choose +, -, *, /, %, ** : ")
+        num2 = float(input("Second number: "))
 
-elif operator == "*":
-    print(num1 * num2)
+        if operator == "+":
+            result = num1 + num2
 
-elif operator == "/":
-    print(num1 / num2)
+        elif operator == "-":
+            result = num1 - num2
 
-else:
-    print("Invalid operator")
+        elif operator == "*":
+            result = num1 * num2
+
+        elif operator == "/":
+
+            if num2 == 0:
+                print("Error: Cannot divide by zero")
+                return
+
+            result = num1 / num2
+
+        elif operator == "%":
+            result = num1 % num2
+
+        elif operator == "**":
+            result = num1 ** num2
+
+        else:
+            print("Invalid operator")
+            return
+
+        print(f"\nResult: {result}")
+
+    except ValueError:
+        print("Invalid number entered")
+
+
+while True:
+
+    calculator()
+
+    choice = input("\nDo another calculation? (yes/no): ").lower()
+
+    if choice != "yes":
+        print("Calculator closed.")
+        break
