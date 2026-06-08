@@ -1,71 +1,132 @@
-def encrypt(text, shift):
+def caesar_cipher(text, shift):
     result = ""
 
     for char in text:
         if char.isalpha():
-            if char.isupper():
-                result += chr((ord(char) - ord('A') + shift) % 26 + ord('A'))
-            else:
-                result += chr((ord(char) - ord('a') + shift) % 26 + ord('a'))
+            start = ord('A') if char.isupper() else ord('a')
+            result += chr((ord(char) - start + shift) % 26 + start)
         else:
             result += char
 
     return result
 
 
-def decrypt(text, shift):
-    return encrypt(text, -shift)
-
-
 def read_file(filename):
     try:
-        with open(filename, "r") as file:
+        with open(filename, "r", encoding="utf-8") as file:
             return file.read()
     except FileNotFoundError:
-        print("File not found.")
-        return None
+        print("❌ File not found.")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+
+    return None
 
 
 def write_file(filename, content):
-    with open(filename, "w") as file:
-        file.write(content)
+    try:
+        with open(filename, "w", encoding="utf-8") as file:
+            file.write(content)
+        print(f"✅ Saved to '{filename}'")
+    except Exception as e:
+        print(f"❌ Error writing file: {e}")
 
 
-while True:
-    print("\n=== Caesar Cipher File Tool ===")
-    print("1. Encrypt File")
-    print("2. Decrypt File")
-    print("3. Exit")
+def encrypt_file():
+    filename = input("Input file: ")
+    text = read_file(filename)
 
-    choice = input("Enter your choice: ")
+    if text is None:
+        return
 
-    if choice == "1":
-        input_file = input("Enter input file name: ")
-        output_file = input("Enter output file name: ")
-        shift = int(input("Enter shift value: "))
+    shift = get_shift()
 
-        text = read_file(input_file)
+    encrypted = caesar_cipher(text, shift)
 
-        if text is not None:
-            encrypted_text = encrypt(text, shift)
-            write_file(output_file, encrypted_text)
-            print("File encrypted successfully!")
+    print("\nPreview:")
+    print("-" * 40)
+    print(encrypted[:300])
+    print("-" * 40)
 
-    elif choice == "2":
-        input_file = input("Enter encrypted file name: ")
-        output_file = input("Enter output file name: ")
-        shift = int(input("Enter shift value: "))
+    output = input("Output file name: ")
+    write_file(output, encrypted)
 
-        text = read_file(input_file)
 
-        if text is not None:
-            decrypted_text = decrypt(text, shift)
-            write_file(output_file, decrypted_text)
-            print("File decrypted successfully!")
+def decrypt_file():
+    filename = input("Encrypted file: ")
+    text = read_file(filename)
 
-    elif choice == "3":
-        print("Goodbye!")
-        break
+    if text is None:
+        return
 
-    else:
-        print("Invalid choice. Try again.")
+    shift = get_shift()
+
+    decrypted = caesar_cipher(text, -shift)
+
+    print("\nPreview:")
+    print("-" * 40)
+    print(decrypted[:300])
+    print("-" * 40)
+
+    output = input("Output file name: ")
+    write_file(output, decrypted)
+
+
+def brute_force():
+    filename = input("Encrypted file: ")
+    text = read_file(filename)
+
+    if text is None:
+        return
+
+    print("\nTrying all possible shifts:\n")
+
+    for shift in range(26):
+        print(f"\nShift {shift}")
+        print("-" * 40)
+        print(caesar_cipher(text, -shift)[:200])
+        print("-" * 40)
+
+
+def get_shift():
+    while True:
+        try:
+            shift = int(input("Shift value (1-25): "))
+            if 1 <= shift <= 25:
+                return shift
+            print("Enter a value between 1 and 25.")
+        except ValueError:
+            print("Enter a valid number.")
+
+
+def main():
+    while True:
+        print("\n" + "=" * 50)
+        print("      CAESAR CIPHER FILE ENCRYPTOR")
+        print("=" * 50)
+        print("1. Encrypt File")
+        print("2. Decrypt File")
+        print("3. Crack File (Brute Force)")
+        print("4. Exit")
+
+        choice = input("\nChoose an option: ")
+
+        if choice == "1":
+            encrypt_file()
+
+        elif choice == "2":
+            decrypt_file()
+
+        elif choice == "3":
+            brute_force()
+
+        elif choice == "4":
+            print("Exiting...")
+            break
+
+        else:
+            print("Invalid choice.")
+
+
+if __name__ == "__main__":
+    main()
