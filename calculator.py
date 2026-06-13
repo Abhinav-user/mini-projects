@@ -1,51 +1,97 @@
-def calculator():
+import math
 
-    print("\n--- Simple Calculator ---")
+history = []
+
+def calculator():
+    print("\n--- Advanced Calculator ---")
+    print("Operators: +, -, *, /, %, **, //, sqrt, max, min, avg")
+
+    operation = input("Choose operation: ").lower()
 
     try:
-        num1 = float(input("First number: "))
-        operator = input("Choose +, -, *, /, %, ** : ")
-        num2 = float(input("Second number: "))
+        if operation == "sqrt":
+            num = float(input("Enter number: "))
 
-        if operator == "+":
-            result = num1 + num2
-
-        elif operator == "-":
-            result = num1 - num2
-
-        elif operator == "*":
-            result = num1 * num2
-
-        elif operator == "/":
-
-            if num2 == 0:
-                print("Error: Cannot divide by zero")
+            if num < 0:
+                print("Cannot find square root of negative number.")
                 return
 
-            result = num1 / num2
-
-        elif operator == "%":
-            result = num1 % num2
-
-        elif operator == "**":
-            result = num1 ** num2
+            result = math.sqrt(num)
 
         else:
-            print("Invalid operator")
-            return
+            num1 = float(input("First number: "))
+            num2 = float(input("Second number: "))
 
-        print(f"\nResult: {result}")
+            if operation == "+":
+                result = num1 + num2
+
+            elif operation == "-":
+                result = num1 - num2
+
+            elif operation == "*":
+                result = num1 * num2
+
+            elif operation == "/":
+                if num2 == 0:
+                    print("Cannot divide by zero.")
+                    return
+                result = num1 / num2
+
+            elif operation == "%":
+                result = num1 % num2
+
+            elif operation == "**":
+                result = num1 ** num2
+
+            elif operation == "//":
+                result = num1 // num2
+
+            elif operation == "max":
+                result = max(num1, num2)
+
+            elif operation == "min":
+                result = min(num1, num2)
+
+            elif operation == "avg":
+                result = (num1 + num2) / 2
+
+            else:
+                print("Invalid operation.")
+                return
+
+        print("Result:", result)
+
+        history.append(f"{operation} = {result}")
 
     except ValueError:
-        print("Invalid number entered")
-
+        print("Invalid input.")
 
 while True:
+    print("\n1. Calculator")
+    print("2. View History")
+    print("3. Clear History")
+    print("4. Exit")
 
-    calculator()
+    choice = input("Enter choice: ")
 
-    choice = input("\nDo another calculation? (yes/no): ").lower()
+    if choice == "1":
+        calculator()
 
-    if choice != "yes":
+    elif choice == "2":
+        print("\n--- History ---")
+        if len(history) == 0:
+            print("No calculations yet.")
+        else:
+            for item in history:
+                print(item)
+
+    elif choice == "3":
+        history.clear()
+        print("History cleared.")
+
+    elif choice == "4":
         print("Calculator closed.")
         break
+
+    else:
+        print("Invalid choice.")
