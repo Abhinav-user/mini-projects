@@ -157,3 +157,72 @@ def dfs(draw, start, end):
     return False
 
 
+def dijkstra(draw, start, end):
+    count = 0
+    pq = PriorityQueue()
+    pq.put((0, count, start))
+
+    came_from = {}
+    dist = {start: 0}
+
+    while not pq.empty():
+        current = pq.get()[2]
+
+        if current == end:
+            reconstruct(came_from, end, draw)
+            return True
+
+        for neighbor in current.neighbors:
+            temp = dist[current] + 1
+
+            if neighbor not in dist or temp < dist[neighbor]:
+                dist[neighbor] = temp
+                count += 1
+                pq.put((temp, count, neighbor))
+                came_from[neighbor] = current
+
+        draw()
+
+        if current != start:
+            current.make_closed()
+
+    return False
+
+
+def astar(draw, start, end):
+    count = 0
+    open_set = PriorityQueue()
+    open_set.put((0, count, start))
+
+    came_from = {}
+    g_score = {start: 0}
+
+    while not open_set.empty():
+        current = open_set.get()[2]
+
+        if current == end:
+            reconstruct(came_from, end, draw)
+            return True
+
+        for neighbor in current.neighbors:
+            temp_g = g_score[current] + 1
+
+            if neighbor not in g_score or temp_g < g_score[neighbor]:
+                g_score[neighbor] = temp_g
+                f = temp_g + heuristic(
+                    neighbor.get_pos(),
+                    end.get_pos()
+                )
+
+                count += 1
+                open_set.put((f, count, neighbor))
+                came_from[neighbor] = current
+
+        draw()
+
+        if current != start:
+            current.make_closed()
+
+    return False
+
+
