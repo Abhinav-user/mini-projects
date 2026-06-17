@@ -225,4 +225,115 @@ def astar(draw, start, end):
 
     return False
 
+def make_grid(rows, width):
+    grid = []
+    gap = width // rows
 
+    for i in range(rows):
+        grid.append([])
+        for j in range(rows):
+            grid[i].append(
+                Spot(i, j, gap, rows)
+            )
+
+    return grid
+
+
+def draw_grid(win, rows, width):
+    gap = width // rows
+
+    for i in range(rows):
+        pygame.draw.line(win, GREY, (0, i * gap), (width, i * gap))
+
+    for j in range(rows):
+        pygame.draw.line(win, GREY, (j * gap, 0), (j * gap, width))
+
+
+def draw(win, grid, rows, width):
+    win.fill(WHITE)
+
+    for row in grid:
+        for spot in row:
+            spot.draw(win)
+
+    draw_grid(win, rows, width)
+    pygame.display.update()
+
+
+def get_clicked(pos, rows, width):
+    gap = width // rows
+    y, x = pos
+
+    row = y // gap
+    col = x // gap
+
+    return row, col
+
+
+def main():
+    grid = make_grid(ROWS, WIDTH)
+
+    start = None
+    end = None
+
+    run = True
+
+    while run:
+        draw(WIN, grid, ROWS, WIDTH)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if pygame.mouse.get_pressed()[0]:
+                pos = pygame.mouse.get_pos()
+                row, col = get_clicked(pos, ROWS, WIDTH)
+                spot = grid[row][col]
+
+                if not start and spot != end:
+                    start = spot
+                    start.make_start()
+
+                elif not end and spot != start:
+                    end = spot
+                    end.make_end()
+
+                elif spot != start and spot != end:
+                    spot.make_barrier()
+
+            if event.type == pygame.KEYDOWN:
+
+                if event.key == pygame.K_c:
+                    for row in grid:
+                        for spot in row:
+                            if spot.color in (RED, GREEN, PURPLE):
+                                spot.reset()
+
+                if event.key == pygame.K_r:
+                    start = None
+                    end = None
+                    grid = make_grid(ROWS, WIDTH)
+
+                if start and end:
+
+                    for row in grid:
+                        for spot in row:
+                            spot.update_neighbors(grid)
+
+                    if event.key == pygame.K_1:
+                        bfs(lambda: draw(WIN, grid, ROWS, WIDTH), start, end)
+
+                    if event.key == pygame.K_2:
+                        dfs(lambda: draw(WIN, grid, ROWS, WIDTH), start, end)
+
+                    if event.key == pygame.K_3:
+                        dijkstra(lambda: draw(WIN, grid, ROWS, WIDTH), start, end)
+
+                    if event.key == pygame.K_4:
+                        astar(lambda: draw(WIN, grid, ROWS, WIDTH), start, end)
+
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
