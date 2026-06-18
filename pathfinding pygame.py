@@ -1,4 +1,6 @@
 import pygame
+import time
+import random
 from queue import Queue, PriorityQueue
 
 pygame.init()
@@ -11,14 +13,18 @@ pygame.display.set_caption("Pathfinding Visualizer")
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
+RED = (255, 80, 80)
+GREEN = (80, 255, 120)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 PURPLE = (128, 0, 128)
 ORANGE = (255, 165, 0)
 GREY = (128, 128, 128)
 TURQUOISE = (64, 224, 208)
+
+FONT = pygame.font.SysFont("arial", 20)
+
+SPEED = 0.01
 
 
 class Spot:
@@ -60,26 +66,22 @@ class Spot:
         self.color = PURPLE
 
     def draw(self, win):
-        pygame.draw.rect(
-            win,
-            self.color,
-            (self.x, self.y, self.width, self.width)
-        )
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.width))
 
     def update_neighbors(self, grid):
         self.neighbors = []
 
-        if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].is_barrier():
-            self.neighbors.append(grid[self.row + 1][self.col])
+        dirs = [
+            (1, 0), (-1, 0), (0, 1), (0, -1),
+            (1, 1), (-1, -1), (1, -1), (-1, 1)
+        ]
 
-        if self.row > 0 and not grid[self.row - 1][self.col].is_barrier():
-            self.neighbors.append(grid[self.row - 1][self.col])
-
-        if self.col < self.total_rows - 1 and not grid[self.row][self.col + 1].is_barrier():
-            self.neighbors.append(grid[self.row][self.col + 1])
-
-        if self.col > 0 and not grid[self.row][self.col - 1].is_barrier():
-            self.neighbors.append(grid[self.row][self.col - 1])
+        for dx, dy in dirs:
+            r = self.row + dx
+            c = self.col + dy
+            if 0 <= r < self.total_rows and 0 <= c < self.total_rows:
+                if not grid[r][c].is_barrier():
+                    self.neighbors.append(grid[r][c])
 
     def __lt__(self, other):
         return False
@@ -89,6 +91,7 @@ def heuristic(a, b):
     x1, y1 = a
     x2, y2 = b
     return abs(x1 - x2) + abs(y1 - y2)
+
 
 def reconstruct(came_from, current, draw):
     while current in came_from:
@@ -100,14 +103,12 @@ def reconstruct(came_from, current, draw):
 def bfs(draw, start, end):
     q = Queue()
     q.put(start)
-
     came_from = {}
     visited = {start}
 
     while not q.empty():
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+        pygame.event.pump()
+        time.sleep(SPEED)
 
         current = q.get()
 
@@ -124,7 +125,6 @@ def bfs(draw, start, end):
                 neighbor.make_open()
 
         draw()
-
         if current != start:
             current.make_closed()
 
@@ -137,6 +137,9 @@ def dfs(draw, start, end):
     visited = {start}
 
     while stack:
+        pygame.event.pump()
+        time.sleep(SPEED)
+
         current = stack.pop()
 
         if current == end:
@@ -150,7 +153,6 @@ def dfs(draw, start, end):
                 stack.append(neighbor)
 
         draw()
-
         if current != start:
             current.make_closed()
 
@@ -161,11 +163,13 @@ def dijkstra(draw, start, end):
     count = 0
     pq = PriorityQueue()
     pq.put((0, count, start))
-
     came_from = {}
     dist = {start: 0}
 
     while not pq.empty():
+        pygame.event.pump()
+        time.sleep(SPEED)
+
         current = pq.get()[2]
 
         if current == end:
@@ -182,7 +186,6 @@ def dijkstra(draw, start, end):
                 came_from[neighbor] = current
 
         draw()
-
         if current != start:
             current.make_closed()
 
@@ -198,6 +201,9 @@ def astar(draw, start, end):
     g_score = {start: 0}
 
     while not open_set.empty():
+        pygame.event.pump()
+        time.sleep(SPEED)
+
         current = open_set.get()[2]
 
         if current == end:
@@ -209,21 +215,18 @@ def astar(draw, start, end):
 
             if neighbor not in g_score or temp_g < g_score[neighbor]:
                 g_score[neighbor] = temp_g
-                f = temp_g + heuristic(
-                    neighbor.get_pos(),
-                    end.get_pos()
-                )
+                f = temp_g + heuristic(neighbor.get_pos(), end.get_pos())
 
                 count += 1
                 open_set.put((f, count, neighbor))
                 came_from[neighbor] = current
 
         draw()
-
         if current != start:
             current.make_closed()
 
     return False
+
 
 def make_grid(rows, width):
     grid = []
@@ -232,11 +235,14 @@ def make_grid(rows, width):
     for i in range(rows):
         grid.append([])
         for j in range(rows):
-            grid[i].append(
-                Spot(i, j, gap, rows)
-            )
+            grid[i].append(Spot(i, j, gap, rows))
 
     return grid
+
+
+def draw_text(win, text):
+    render = FONT.render(text, True, BLACK)
+    win.blit(render, (10, 10))
 
 
 def draw_grid(win, rows, width):
@@ -257,24 +263,30 @@ def draw(win, grid, rows, width):
             spot.draw(win)
 
     draw_grid(win, rows, width)
+    draw_text(win, "Pathfinding Visualizer (1 BFS, 2 DFS, 3 Dijkstra, 4 A*, M Maze)")
     pygame.display.update()
 
 
 def get_clicked(pos, rows, width):
     gap = width // rows
     y, x = pos
+    return y // gap, x // gap
 
-    row = y // gap
-    col = x // gap
 
-    return row, col
+def generate_maze(grid):
+    for row in grid:
+        for spot in row:
+            if random.random() < 0.3:
+                spot.make_barrier()
 
 
 def main():
-    grid = make_grid(ROWS, WIDTH)
+    global SPEED
 
+    grid = make_grid(ROWS, WIDTH)
     start = None
     end = None
+    history = []
 
     run = True
 
@@ -293,29 +305,46 @@ def main():
                 if not start and spot != end:
                     start = spot
                     start.make_start()
-
                 elif not end and spot != start:
                     end = spot
                     end.make_end()
-
                 elif spot != start and spot != end:
                     spot.make_barrier()
 
+                history.append(spot)
+
             if event.type == pygame.KEYDOWN:
 
+                if event.key == pygame.K_UP:
+                    SPEED = max(0.001, SPEED - 0.005)
+
+                if event.key == pygame.K_DOWN:
+                    SPEED += 0.005
+
+                if event.key == pygame.K_u and history:
+                    last = history.pop()
+                    last.reset()
+                    if last == start:
+                        start = None
+                    if last == end:
+                        end = None
+
                 if event.key == pygame.K_c:
+                    start = None
+                    end = None
                     for row in grid:
                         for spot in row:
-                            if spot.color in (RED, GREEN, PURPLE):
-                                spot.reset()
+                            spot.reset()
 
                 if event.key == pygame.K_r:
                     start = None
                     end = None
                     grid = make_grid(ROWS, WIDTH)
 
-                if start and end:
+                if event.key == pygame.K_m:
+                    generate_maze(grid)
 
+                if start and end:
                     for row in grid:
                         for spot in row:
                             spot.update_neighbors(grid)
