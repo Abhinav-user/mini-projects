@@ -1,3 +1,11 @@
+import os
+from collections import Counter
+from datetime import datetime
+
+# ---------------------------
+# Cipher Functions
+# ---------------------------
+
 def caesar_cipher(text, shift):
     result = ""
 
@@ -10,106 +18,275 @@ def caesar_cipher(text, shift):
 
     return result
 
+# ---------------------------
+# File Operations
+# ---------------------------
 
 def read_file(filename):
     try:
         with open(filename, "r", encoding="utf-8") as file:
             return file.read()
-    except FileNotFoundError:
-        print("❌ File not found.")
     except Exception as e:
-        print(f"❌ Error: {e}")
-
-    return None
-
+        print("Error:", e)
+        return None
 
 def write_file(filename, content):
     try:
         with open(filename, "w", encoding="utf-8") as file:
             file.write(content)
-        print(f"✅ Saved to '{filename}'")
+        print(f"Saved -> {filename}")
     except Exception as e:
-        print(f"❌ Error writing file: {e}")
+        print("Error:", e)
 
+# ---------------------------
+# Statistics
+# ---------------------------
+
+def show_stats(text):
+    print("\nFILE STATISTICS")
+    print("-" * 30)
+
+    print("Characters:", len(text))
+    print("Letters:", sum(c.isalpha() for c in text))
+    print("Digits:", sum(c.isdigit() for c in text))
+    print("Words:", len(text.split()))
+
+# ---------------------------
+# Logging
+# ---------------------------
+
+def log_action(action):
+    with open("cipher_log.txt", "a", encoding="utf-8") as log:
+        log.write(
+            f"{datetime.now()} | {action}\n"
+        )
+
+# ---------------------------
+# Frequency Analysis
+# ---------------------------
+
+def guess_shift(text):
+
+    letters = [
+        c.lower()
+        for c in text
+        if c.isalpha()
+    ]
+
+    if not letters:
+        return 0
+
+    most_common = Counter(
+        letters
+    ).most_common(1)[0][0]
+
+    return (ord(most_common) - ord('e')) % 26
+
+# ---------------------------
+# Encrypt
+# ---------------------------
 
 def encrypt_file():
+
     filename = input("Input file: ")
+
     text = read_file(filename)
 
     if text is None:
         return
 
-    shift = get_shift()
+    show_stats(text)
 
-    encrypted = caesar_cipher(text, shift)
+    shift = int(input("Shift (1-25): "))
 
-    print("\nPreview:")
-    print("-" * 40)
-    print(encrypted[:300])
-    print("-" * 40)
+    encrypted = caesar_cipher(
+        text,
+        shift
+    )
 
-    output = input("Output file name: ")
+    output = input(
+        "Output file: "
+    )
+
     write_file(output, encrypted)
 
+    log_action(
+        f"Encrypted {filename} -> {output}"
+    )
+
+# ---------------------------
+# Decrypt
+# ---------------------------
 
 def decrypt_file():
-    filename = input("Encrypted file: ")
+
+    filename = input(
+        "Encrypted file: "
+    )
+
     text = read_file(filename)
 
     if text is None:
         return
 
-    shift = get_shift()
+    shift = int(
+        input("Shift (1-25): ")
+    )
 
-    decrypted = caesar_cipher(text, -shift)
+    decrypted = caesar_cipher(
+        text,
+        -shift
+    )
 
-    print("\nPreview:")
-    print("-" * 40)
-    print(decrypted[:300])
-    print("-" * 40)
+    output = input(
+        "Output file: "
+    )
 
-    output = input("Output file name: ")
     write_file(output, decrypted)
 
+    log_action(
+        f"Decrypted {filename}"
+    )
+
+# ---------------------------
+# Brute Force
+# ---------------------------
 
 def brute_force():
-    filename = input("Encrypted file: ")
+
+    filename = input(
+        "Encrypted file: "
+    )
+
     text = read_file(filename)
 
     if text is None:
         return
 
-    print("\nTrying all possible shifts:\n")
-
     for shift in range(26):
-        print(f"\nShift {shift}")
-        print("-" * 40)
-        print(caesar_cipher(text, -shift)[:200])
-        print("-" * 40)
 
+        print(
+            f"\nSHIFT {shift}"
+        )
 
-def get_shift():
-    while True:
-        try:
-            shift = int(input("Shift value (1-25): "))
-            if 1 <= shift <= 25:
-                return shift
-            print("Enter a value between 1 and 25.")
-        except ValueError:
-            print("Enter a valid number.")
+        print("-" * 50)
 
+        print(
+            caesar_cipher(
+                text,
+                -shift
+            )[:300]
+        )
+
+# ---------------------------
+# Auto Crack
+# ---------------------------
+
+def auto_crack():
+
+    filename = input(
+        "Encrypted file: "
+    )
+
+    text = read_file(filename)
+
+    if text is None:
+        return
+
+    shift = guess_shift(text)
+
+    decrypted = caesar_cipher(
+        text,
+        -shift
+    )
+
+    print(
+        f"\nEstimated Shift: {shift}"
+    )
+
+    print("-" * 50)
+
+    print(decrypted[:500])
+
+# ---------------------------
+# Batch Encrypt
+# ---------------------------
+
+def batch_encrypt():
+
+    folder = input(
+        "Folder path: "
+    )
+
+    shift = int(
+        input("Shift: ")
+    )
+
+    output_folder = (
+        folder + "_encrypted"
+    )
+
+    os.makedirs(
+        output_folder,
+        exist_ok=True
+    )
+
+    count = 0
+
+    for file in os.listdir(folder):
+
+        if file.endswith(".txt"):
+
+            path = os.path.join(
+                folder,
+                file
+            )
+
+            text = read_file(path)
+
+            encrypted = (
+                caesar_cipher(
+                    text,
+                    shift
+                )
+            )
+
+            write_file(
+                os.path.join(
+                    output_folder,
+                    file
+                ),
+                encrypted
+            )
+
+            count += 1
+
+    print(
+        f"\nEncrypted {count} files."
+    )
+
+# ---------------------------
+# Main Menu
+# ---------------------------
 
 def main():
+
     while True:
+
         print("\n" + "=" * 50)
-        print("      CAESAR CIPHER FILE ENCRYPTOR")
+        print("ADVANCED CAESAR TOOLKIT")
         print("=" * 50)
+
         print("1. Encrypt File")
         print("2. Decrypt File")
-        print("3. Crack File (Brute Force)")
-        print("4. Exit")
+        print("3. Brute Force Crack")
+        print("4. Auto Crack")
+        print("5. Batch Encrypt Folder")
+        print("6. Exit")
 
-        choice = input("\nChoose an option: ")
+        choice = input(
+            "\nChoice: "
+        )
 
         if choice == "1":
             encrypt_file()
@@ -121,12 +298,19 @@ def main():
             brute_force()
 
         elif choice == "4":
-            print("Exiting...")
+            auto_crack()
+
+        elif choice == "5":
+            batch_encrypt()
+
+        elif choice == "6":
+            print("Goodbye!")
             break
 
         else:
-            print("Invalid choice.")
-
+            print(
+                "Invalid option."
+            )
 
 if __name__ == "__main__":
     main()
