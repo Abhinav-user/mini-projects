@@ -82,9 +82,7 @@ def guess_shift(text):
 
     return (ord(most_common) - ord('e')) % 26
 
-# ---------------------------
 # Encrypt
-# ---------------------------
 
 def encrypt_file():
 
@@ -114,9 +112,8 @@ def encrypt_file():
         f"Encrypted {filename} -> {output}"
     )
 
-# ---------------------------
+
 # Decrypt
-# ---------------------------
 
 def decrypt_file():
 
@@ -148,9 +145,7 @@ def decrypt_file():
         f"Decrypted {filename}"
     )
 
-# ---------------------------
 # Brute Force
-# ---------------------------
 
 def brute_force():
 
@@ -178,9 +173,7 @@ def brute_force():
             )[:300]
         )
 
-# ---------------------------
 # Auto Crack
-# ---------------------------
 
 def auto_crack():
 
@@ -208,9 +201,8 @@ def auto_crack():
 
     print(decrypted[:500])
 
-# ---------------------------
+
 # Batch Encrypt
-# ---------------------------
 
 def batch_encrypt():
 
@@ -265,10 +257,7 @@ def batch_encrypt():
         f"\nEncrypted {count} files."
     )
 
-# ---------------------------
 # Main Menu
-# ---------------------------
-
 def main():
 
     while True:
