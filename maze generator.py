@@ -189,7 +189,19 @@ def bfs(grid):
     return path[::-1]
 
 
+def draw_path(path):
+    for cell in path:
+        x = cell.col * CELL + CELL // 4
+        y = cell.row * CELL + CELL // 4
 
+        pygame.draw.rect(
+            WIN,
+            YELLOW,
+            (x, y, CELL // 2, CELL // 2)
+        )
+        
+        pygame.display.update()
+        pygame.time.delay(30)
 
 
 def draw(grid):
