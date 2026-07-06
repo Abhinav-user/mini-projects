@@ -1,72 +1,93 @@
-print(" ARITHMETIC OPERATORS IN PYTHON ")
+import math
 
-# Taking input from user
+print("=" * 45)
+print("        ADVANCED PYTHON CALCULATOR")
+print("=" * 45)
 
-num1 = float(input("Enter first number: "))
-num2 = float(input("Enter second number: "))
+while True:
 
-# Addition
+    num1 = float(input("\nEnter first number : "))
+    num2 = float(input("Enter second number: "))
 
-addition = num1 + num2
+    print("\nChoose an option")
+    print("1. Show All Arithmetic Operations")
+    print("2. Compare Numbers")
+    print("3. Square Root")
+    print("4. Absolute Difference")
+    print("5. Largest & Smallest")
+    print("6. Swap Numbers")
+    print("7. Enter New Numbers")
+    print("8. Exit")
 
-print("\nAddition (+)")
-print(num1, "+", num2, "=", addition)
+    choice = input("Enter choice: ")
 
-# Subtraction
+    if choice == "1":
 
-subtraction = num1 - num2
+        print("\n----- Arithmetic Operations -----")
 
-print("\nSubtraction (-)")
-print(num1, "-", num2, "=", subtraction)
+        print(f"{num1} + {num2} = {num1 + num2}")
+        print(f"{num1} - {num2} = {num1 - num2}")
+        print(f"{num1} * {num2} = {num1 * num2}")
 
-# Multiplication
+        if num2 != 0:
+            print(f"{num1} / {num2} = {round(num1 / num2,2)}")
+            print(f"{num1} // {num2} = {num1 // num2}")
+            print(f"{num1} % {num2} = {num1 % num2}")
+        else:
+            print("Division, Floor Division and Modulus not possible.")
 
-multiplication = num1 * num2
+        print(f"{num1} ** {num2} = {num1 ** num2}")
 
-print("\nMultiplication (*)")
-print(num1, "*", num2, "=", multiplication)
+    elif choice == "2":
 
-# Division
+        print("\n----- Comparison -----")
 
-if num2 != 0:
+        if num1 > num2:
+            print(num1, "is greater.")
+        elif num2 > num1:
+            print(num2, "is greater.")
+        else:
+            print("Both numbers are equal.")
 
-    division = num1 / num2
+    elif choice == "3":
 
-    print("\nDivision (/)")
-    print(num1, "/", num2, "=", division)
+        print("\n----- Square Root -----")
 
-else:
-    print("\nDivision not possible (cannot divide by zero)")
+        if num1 >= 0:
+            print("√", num1, "=", round(math.sqrt(num1), 2))
+        else:
+            print("Square root of first number not possible.")
 
-# Floor Division
+        if num2 >= 0:
+            print("√", num2, "=", round(math.sqrt(num2), 2))
+        else:
+            print("Square root of second number not possible.")
 
-if num2 != 0:
+    elif choice == "4":
 
-    floor_division = num1 // num2
+        print("\nAbsolute Difference =", abs(num1 - num2))
 
-    print("\nFloor Division (//)")
-    print(num1, "//", num2, "=", floor_division)
+    elif choice == "5":
 
-else:
-    print("\nFloor division not possible")
+        print("\nLargest Number :", max(num1, num2))
+        print("Smallest Number:", min(num1, num2))
 
-# Modulus
+    elif choice == "6":
 
-if num2 != 0:
+        num1, num2 = num2, num1
 
-    modulus = num1 % num2
+        print("\nNumbers Swapped!")
+        print("First Number :", num1)
+        print("Second Number:", num2)
 
-    print("\nModulus (%)")
-    print(num1, "%", num2, "=", modulus)
+    elif choice == "7":
+        continue
 
-else:
-    print("\nModulus not possible")
+    elif choice == "8":
+        print("\nThank you for using the calculator!")
+        break
 
-# Exponent
+    else:
+        print("\nInvalid choice!")
 
-power = num1 ** num2
-
-print("\nExponent (**)")
-print(num1, "**", num2, "=", power)
-
-print("\n====== PROGRAM COMPLETED ======")
+    input("\nPress Enter to continue...")
