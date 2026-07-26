@@ -1,76 +1,118 @@
-import os
 import shutil
 import hashlib
+import time
+from pathlib import Path
 
 
-def file_hash(path):
-    """Return SHA256 hash of a file."""
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        while chunk := f.read(8192):
-            h.update(chunk)
-    return h.hexdigest()
+def file_hash(file_path):
+    """Generate SHA-256 hash of a file."""
+    hasher = hashlib.sha256()
+
+    try:
+        with open(file_path, "rb") as file:
+            while chunk := file.read(8192):
+                hasher.update(chunk)
+        return hasher.hexdigest()
+    except Exception:
+        return None
 
 
 def sync(source, destination, mirror=False):
-    # Create destination if it doesn't exist
-    os.makedirs(destination, exist_ok=True)
+    source = Path(source)
+    destination = Path(destination)
 
-    src_files = {}
+    destination.mkdir(parents=True, exist_ok=True)
 
-    # Traverse source folder
-    for root, dirs, files in os.walk(source):
-        rel_path = os.path.relpath(root, source)
-        dest_root = os.path.join(destination, rel_path)
+    copied = 0
+    updated = 0
+    skipped = 0
+    deleted = 0
 
-        os.makedirs(dest_root, exist_ok=True)
+    source_files = set()
 
-        for file in files:
-            src_path = os.path.join(root, file)
-            dest_path = os.path.join(dest_root, file)
+    print("\nSynchronizing...\n")
 
-            rel_file = os.path.relpath(src_path, source)
-            src_files[rel_file] = True
+    for item in source.rglob("*"):
 
-            # Copy if missing
-            if not os.path.exists(dest_path):
-                shutil.copy2(src_path, dest_path)
-                print(f"[COPIED] {rel_file}")
+        relative = item.relative_to(source)
+        target = destination / relative
 
-            # Update if changed
-            elif file_hash(src_path) != file_hash(dest_path):
-                shutil.copy2(src_path, dest_path)
-                print(f"[UPDATED] {rel_file}")
+        if item.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+            continue
 
-    # Mirror mode: delete files not in source
+        source_files.add(str(relative))
+
+        if not target.exists():
+            shutil.copy2(item, target)
+            copied += 1
+            print(f"[COPIED]  {relative}")
+
+        else:
+            # Compare size first (faster)
+            if item.stat().st_size != target.stat().st_size:
+                shutil.copy2(item, target)
+                updated += 1
+                print(f"[UPDATED] {relative}")
+
+            else:
+                if file_hash(item) != file_hash(target):
+                    shutil.copy2(item, target)
+                    updated += 1
+                    print(f"[UPDATED] {relative}")
+                else:
+                    skipped += 1
+                    print(f"[SKIPPED] {relative}")
+
     if mirror:
-        for root, dirs, files in os.walk(destination):
-            for file in files:
-                dest_path = os.path.join(root, file)
-                rel_file = os.path.relpath(dest_path, destination)
+        print("\nChecking extra files...")
 
-                if rel_file not in src_files:
-                    os.remove(dest_path)
-                    print(f"[DELETED] {rel_file}")
+        for item in destination.rglob("*"):
+            if item.is_file():
+                relative = str(item.relative_to(destination))
 
-    print("\nSynchronization Complete!")
+                if relative not in source_files:
+                    item.unlink()
+                    deleted += 1
+                    print(f"[DELETED] {relative}")
+
+    print("\n" + "=" * 45)
+    print("        SYNCHRONIZATION SUMMARY")
+    print("=" * 45)
+    print(f"Files Copied  : {copied}")
+    print(f"Files Updated : {updated}")
+    print(f"Files Skipped : {skipped}")
+    if mirror:
+        print(f"Files Deleted : {deleted}")
+    print("=" * 45)
 
 
 def main():
-    print("=" * 40)
-    print("      FILE SYNCHRONIZER")
-    print("=" * 40)
+    print("=" * 50)
+    print("         ADVANCED FILE SYNCHRONIZER")
+    print("=" * 50)
 
-    source = input("Source Folder: ").strip()
-    destination = input("Destination Folder: ").strip()
+    source = input("Enter Source Folder      : ").strip()
+    destination = input("Enter Destination Folder : ").strip()
 
-    if not os.path.isdir(source):
-        print("Source folder does not exist.")
+    if not Path(source).exists():
+        print("\nSource folder does not exist.")
         return
 
-    mirror = input("Mirror Mode? (y/n): ").lower() == "y"
+    mirror = input("Enable Mirror Mode (Y/N): ").strip().lower() == "y"
 
-    sync(source, destination, mirror)
+    start = time.time()
+
+    try:
+        sync(source, destination, mirror)
+    except PermissionError:
+        print("\nPermission denied while accessing files.")
+    except Exception as error:
+        print(f"\nUnexpected Error: {error}")
+
+    end = time.time()
+
+    print(f"\nCompleted in {end - start:.2f} seconds.")
 
 
 if __name__ == "__main__":
