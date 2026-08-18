@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
-public class MemoryGame {
+public class memorygame {
 
     public static void main(String[] args) throws Exception {
 
@@ -14,7 +14,7 @@ public class MemoryGame {
                 new InetSocketAddress(8080), 0
         );
 
-        server.createContext("/", MemoryGame::home);
+        server.createContext("/", memorygame::home);
 
         server.start();
 
