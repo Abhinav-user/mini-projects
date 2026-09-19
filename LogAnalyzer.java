@@ -46,8 +46,8 @@ public class LogAnalyzer {
 
             if (request.startsWith("logs=")) {
                 logs = URLDecoder.decode(
-                        request.substring(5),
-                        StandardCharsets.UTF_8);
+                    request.substring(5),
+                    "UTF-8");
             }
         }
 
