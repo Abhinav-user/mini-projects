@@ -5,15 +5,12 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.*;
 
 public class ParkingLot {
 
     static final int TOTAL_SLOTS = 12;
 
-    static ParkingSlot[] slots =
-            new ParkingSlot[TOTAL_SLOTS];
+    static ParkingSlot[] slots = new ParkingSlot[TOTAL_SLOTS];
 
     static {
         for (int i = 0; i < TOTAL_SLOTS; i++) {
@@ -58,29 +55,23 @@ public class ParkingLot {
 
     // ================= HOME =================
 
-    static void home(HttpExchange exchange)
-            throws IOException {
+    static void home(HttpExchange exchange) throws IOException {
 
-        StringBuilder parking =
-                new StringBuilder();
+        StringBuilder parking = new StringBuilder();
 
         for (ParkingSlot slot : slots) {
 
-            String status =
-                    slot.isFree()
+            String status = slot.isFree()
                     ? "FREE"
                     : "OCCUPIED";
 
-            String vehicle =
-                    slot.isFree()
+            String vehicle = slot.isFree()
                     ? ""
                     : "<br>" + slot.vehicleNumber;
 
             parking.append(
                     "<div class='slot " +
-                    (slot.isFree()
-                    ? "free"
-                    : "occupied") +
+                    (slot.isFree() ? "free" : "occupied") +
                     "'>" +
 
                     "<b>Slot " +
@@ -105,8 +96,7 @@ public class ParkingLot {
             }
         }
 
-        int occupied =
-                TOTAL_SLOTS - free;
+        int occupied = TOTAL_SLOTS - free;
 
         String html =
                 "<!DOCTYPE html>" +
@@ -156,8 +146,7 @@ public class ParkingLot {
 
                 ".parking{" +
                 "display:grid;" +
-                "grid-template-columns:" +
-                "repeat(4,1fr);" +
+                "grid-template-columns:repeat(4,1fr);" +
                 "gap:12px;" +
                 "}" +
 
@@ -206,13 +195,15 @@ public class ParkingLot {
                 "}" +
 
                 "@media(max-width:600px){" +
+
                 ".parking{" +
-                "grid-template-columns:" +
-                "repeat(2,1fr);" +
+                "grid-template-columns:repeat(2,1fr);" +
                 "}" +
+
                 ".forms{" +
                 "grid-template-columns:1fr;" +
                 "}" +
+
                 "}" +
 
                 "</style>" +
@@ -329,20 +320,14 @@ public class ParkingLot {
 
     // ================= PARK =================
 
-    static void park(HttpExchange exchange)
-            throws IOException {
+    static void park(HttpExchange exchange) throws IOException {
 
-        String data =
-                readRequest(exchange);
+        String data = readRequest(exchange);
 
-        String vehicle =
-                getValue(data, "vehicle");
+        String vehicle = getValue(data, "vehicle");
+        String type = getValue(data, "type");
 
-        String type =
-                getValue(data, "type");
-
-        if (vehicle == null ||
-                vehicle.trim().isEmpty()) {
+        if (vehicle == null || vehicle.trim().isEmpty()) {
 
             result(
                     exchange,
@@ -352,8 +337,7 @@ public class ParkingLot {
             return;
         }
 
-        vehicle =
-                vehicle.trim().toUpperCase();
+        vehicle = vehicle.trim().toUpperCase();
 
         // Check duplicate
 
@@ -379,8 +363,7 @@ public class ParkingLot {
 
                 slot.vehicleNumber = vehicle;
                 slot.vehicleType = type;
-                slot.entryTime =
-                        System.currentTimeMillis();
+                slot.entryTime = System.currentTimeMillis();
 
                 result(
                         exchange,
@@ -401,16 +384,13 @@ public class ParkingLot {
 
     // ================= REMOVE =================
 
-    static void remove(HttpExchange exchange)
-            throws IOException {
+    static void remove(HttpExchange exchange) throws IOException {
 
-        String data =
-                readRequest(exchange);
+        String data = readRequest(exchange);
 
-        String vehicle =
-                getValue(data, "vehicle");
+        String vehicle = getValue(data, "vehicle");
 
-        if (vehicle == null) {
+        if (vehicle == null || vehicle.trim().isEmpty()) {
 
             result(
                     exchange,
@@ -420,8 +400,7 @@ public class ParkingLot {
             return;
         }
 
-        vehicle =
-                vehicle.trim().toUpperCase();
+        vehicle = vehicle.trim().toUpperCase();
 
         for (ParkingSlot slot : slots) {
 
@@ -445,8 +424,7 @@ public class ParkingLot {
                                 hours
                         );
 
-                int slotNumber =
-                        slot.number;
+                int slotNumber = slot.number;
 
                 slot.vehicleNumber = null;
                 slot.vehicleType = null;
@@ -477,16 +455,13 @@ public class ParkingLot {
 
     // ================= SEARCH =================
 
-    static void search(HttpExchange exchange)
-            throws IOException {
+    static void search(HttpExchange exchange) throws IOException {
 
-        String data =
-                readRequest(exchange);
+        String data = readRequest(exchange);
 
-        String vehicle =
-                getValue(data, "vehicle");
+        String vehicle = getValue(data, "vehicle");
 
-        if (vehicle == null) {
+        if (vehicle == null || vehicle.trim().isEmpty()) {
 
             result(
                     exchange,
@@ -496,8 +471,7 @@ public class ParkingLot {
             return;
         }
 
-        vehicle =
-                vehicle.trim().toUpperCase();
+        vehicle = vehicle.trim().toUpperCase();
 
         for (ParkingSlot slot : slots) {
 
@@ -539,9 +513,7 @@ public class ParkingLot {
 
     // ================= FEE =================
 
-    static int calculateFee(
-            String type,
-            long hours) {
+    static int calculateFee(String type, long hours) {
 
         int rate;
 
@@ -560,23 +532,19 @@ public class ParkingLot {
 
     // ================= READ REQUEST =================
 
-    static String readRequest(
-            HttpExchange exchange)
+    static String readRequest(HttpExchange exchange)
             throws IOException {
 
-        InputStream input =
-                exchange.getRequestBody();
+        InputStream input = exchange.getRequestBody();
 
         ByteArrayOutputStream output =
                 new ByteArrayOutputStream();
 
-        byte[] buffer =
-                new byte[1024];
+        byte[] buffer = new byte[1024];
 
         int length;
 
-        while ((length =
-                input.read(buffer)) != -1) {
+        while ((length = input.read(buffer)) != -1) {
 
             output.write(
                     buffer,
@@ -598,13 +566,11 @@ public class ParkingLot {
             String key)
             throws UnsupportedEncodingException {
 
-        String[] pairs =
-                data.split("&");
+        String[] pairs = data.split("&");
 
         for (String pair : pairs) {
 
-            String[] parts =
-                    pair.split("=", 2);
+            String[] parts = pair.split("=", 2);
 
             if (parts.length == 2) {
 
@@ -693,9 +659,7 @@ public class ParkingLot {
             throws IOException {
 
         byte[] response =
-                html.getBytes(
-                        StandardCharsets.UTF_8
-                );
+                html.getBytes(StandardCharsets.UTF_8);
 
         exchange.getResponseHeaders().set(
                 "Content-Type",
