@@ -14,20 +14,30 @@ public class FlashcardQuiz {
     public static void main(String[] args) throws Exception {
 
         // Default flashcards
-        cards.add(new String[]{"What does CPU stand for?",
-                "Central Processing Unit"});
+        cards.add(new String[]{
+                "What does CPU stand for?",
+                "Central Processing Unit"
+        });
 
-        cards.add(new String[]{"What does RAM stand for?",
-                "Random Access Memory"});
+        cards.add(new String[]{
+                "What does RAM stand for?",
+                "Random Access Memory"
+        });
 
-        cards.add(new String[]{"What does HTML stand for?",
-                "HyperText Markup Language"});
+        cards.add(new String[]{
+                "What does HTML stand for?",
+                "HyperText Markup Language"
+        });
 
-        cards.add(new String[]{"What does SQL stand for?",
-                "Structured Query Language"});
+        cards.add(new String[]{
+                "What does SQL stand for?",
+                "Structured Query Language"
+        });
 
-        cards.add(new String[]{"What does JVM stand for?",
-                "Java Virtual Machine"});
+        cards.add(new String[]{
+                "What does JVM stand for?",
+                "Java Virtual Machine"
+        });
 
         HttpServer server = HttpServer.create(
                 new InetSocketAddress(8080), 0);
@@ -97,7 +107,8 @@ public class FlashcardQuiz {
 
         if (json.endsWith(",")) {
             json = json.substring(
-                    0, json.length() - 1);
+                    0,
+                    json.length() - 1);
         }
 
         String html =
@@ -286,7 +297,8 @@ public class FlashcardQuiz {
                 "text/html; charset=UTF-8");
 
         byte[] response =
-                html.getBytes(StandardCharsets.UTF_8);
+                html.getBytes(
+                        StandardCharsets.UTF_8);
 
         exchange.sendResponseHeaders(
                 200,
@@ -300,29 +312,31 @@ public class FlashcardQuiz {
     }
 
     static Map<String, String> parseForm(
-            String data) {
+            String data)
+            throws UnsupportedEncodingException {
 
         Map<String, String> result =
                 new HashMap<>();
 
-        String[] pairs = data.split("&");
+        String[] pairs =
+                data.split("&");
 
         for (String pair : pairs) {
 
-            String[] parts = pair.split(
-                    "=", 2);
+            String[] parts =
+                    pair.split("=", 2);
 
             if (parts.length == 2) {
 
                 String key =
                         URLDecoder.decode(
                                 parts[0],
-                                StandardCharsets.UTF_8);
+                                "UTF-8");
 
                 String value =
                         URLDecoder.decode(
                                 parts[1],
-                                StandardCharsets.UTF_8);
+                                "UTF-8");
 
                 result.put(key, value);
             }
