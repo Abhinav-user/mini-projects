@@ -3,11 +3,12 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class LANChat {
+public class LANchat {
 
     static List<Message> messages =
             Collections.synchronizedList(new ArrayList<Message>());
@@ -35,9 +36,9 @@ public class LANChat {
                 new InetSocketAddress(8080), 0
         );
 
-        server.createContext("/", LANChat::home);
-        server.createContext("/send", LANChat::sendMessage);
-        server.createContext("/messages", LANChat::getMessages);
+        server.createContext("/", LANchat::home);
+        server.createContext("/send", LANchat::sendMessage);
+        server.createContext("/messages", LANchat::getMessages);
 
         server.start();
 
