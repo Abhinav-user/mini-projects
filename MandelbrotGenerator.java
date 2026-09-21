@@ -32,139 +32,138 @@ public class MandelbrotGenerator {
 
     static void homePage(HttpExchange exchange) throws IOException {
 
-        String html = """
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Mandelbrot Fractal Generator</title>
-
-                    <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            background: #111;
-                            color: white;
-                            text-align: center;
-                            padding: 30px;
-                        }
-
-                        .box {
-                            max-width: 850px;
-                            margin: auto;
-                            background: #222;
-                            padding: 25px;
-                            border-radius: 15px;
-                        }
-
-                        input {
-                            padding: 10px;
-                            margin: 5px;
-                            width: 100px;
-                            border-radius: 6px;
-                            border: none;
-                        }
-
-                        button {
-                            padding: 11px 20px;
-                            background: #00b894;
-                            color: white;
-                            border: none;
-                            border-radius: 6px;
-                            cursor: pointer;
-                        }
-
-                        button:hover {
-                            background: #019875;
-                        }
-
-                        img {
-                            margin-top: 25px;
-                            width: 700px;
-                            max-width: 100%;
-                            border-radius: 10px;
-                        }
-
-                        .info {
-                            color: #aaa;
-                            margin-top: 15px;
-                        }
-                    </style>
-                </head>
-
-                <body>
-
-                    <div class="box">
-
-                        <h1>🌀 Mandelbrot Fractal Generator</h1>
-
-                        <p>
-                            Generate a fractal using complex-number mathematics.
-                        </p>
-
-                        <form onsubmit="generateFractal(event)">
-
-                            <label>Center X:</label>
-                            <input id="cx" type="number"
-                                   value="-0.5" step="0.01">
-
-                            <label>Center Y:</label>
-                            <input id="cy" type="number"
-                                   value="0" step="0.01">
-
-                            <br><br>
-
-                            <label>Zoom:</label>
-                            <input id="zoom" type="number"
-                                   value="1" step="0.1" min="0.1">
-
-                            <label>Iterations:</label>
-                            <input id="iterations" type="number"
-                                   value="200" min="20" max="1000">
-
-                            <br><br>
-
-                            <button type="submit">
-                                Generate Fractal
-                            </button>
-
-                        </form>
-
-                        <div>
-                            <img id="fractal"
-                                 src="/fractal?cx=-0.5&cy=0&zoom=1&iterations=200">
-                        </div>
-
-                        <p class="info">
-                            Higher zoom and iterations reveal more detail.
-                        </p>
-
-                    </div>
-
-                    <script>
-
-                        function generateFractal(event) {
-
-                            event.preventDefault();
-
-                            let cx = document.getElementById("cx").value;
-                            let cy = document.getElementById("cy").value;
-                            let zoom = document.getElementById("zoom").value;
-                            let iterations =
-                                document.getElementById("iterations").value;
-
-                            let url =
-                                "/fractal?cx=" + cx +
-                                "&cy=" + cy +
-                                "&zoom=" + zoom +
-                                "&iterations=" + iterations;
-
-                            document.getElementById("fractal").src = url;
-                        }
-
-                    </script>
-
-                </body>
-                </html>
-                """;
+        String html =
+                "<!DOCTYPE html>\n" +
+                "<html>\n" +
+                "<head>\n" +
+                "    <title>Mandelbrot Fractal Generator</title>\n" +
+                "\n" +
+                "    <style>\n" +
+                "        body {\n" +
+                "            font-family: Arial, sans-serif;\n" +
+                "            background: #111;\n" +
+                "            color: white;\n" +
+                "            text-align: center;\n" +
+                "            padding: 30px;\n" +
+                "        }\n" +
+                "\n" +
+                "        .box {\n" +
+                "            max-width: 850px;\n" +
+                "            margin: auto;\n" +
+                "            background: #222;\n" +
+                "            padding: 25px;\n" +
+                "            border-radius: 15px;\n" +
+                "        }\n" +
+                "\n" +
+                "        input {\n" +
+                "            padding: 10px;\n" +
+                "            margin: 5px;\n" +
+                "            width: 100px;\n" +
+                "            border-radius: 6px;\n" +
+                "            border: none;\n" +
+                "        }\n" +
+                "\n" +
+                "        button {\n" +
+                "            padding: 11px 20px;\n" +
+                "            background: #00b894;\n" +
+                "            color: white;\n" +
+                "            border: none;\n" +
+                "            border-radius: 6px;\n" +
+                "            cursor: pointer;\n" +
+                "        }\n" +
+                "\n" +
+                "        button:hover {\n" +
+                "            background: #019875;\n" +
+                "        }\n" +
+                "\n" +
+                "        img {\n" +
+                "            margin-top: 25px;\n" +
+                "            width: 700px;\n" +
+                "            max-width: 100%;\n" +
+                "            border-radius: 10px;\n" +
+                "        }\n" +
+                "\n" +
+                "        .info {\n" +
+                "            color: #aaa;\n" +
+                "            margin-top: 15px;\n" +
+                "        }\n" +
+                "    </style>\n" +
+                "</head>\n" +
+                "\n" +
+                "<body>\n" +
+                "\n" +
+                "    <div class=\"box\">\n" +
+                "\n" +
+                "        <h1>🌀 Mandelbrot Fractal Generator</h1>\n" +
+                "\n" +
+                "        <p>\n" +
+                "            Generate a fractal using complex-number mathematics.\n" +
+                "        </p>\n" +
+                "\n" +
+                "        <form onsubmit=\"generateFractal(event)\">\n" +
+                "\n" +
+                "            <label>Center X:</label>\n" +
+                "            <input id=\"cx\" type=\"number\"\n" +
+                "                   value=\"-0.5\" step=\"0.01\">\n" +
+                "\n" +
+                "            <label>Center Y:</label>\n" +
+                "            <input id=\"cy\" type=\"number\"\n" +
+                "                   value=\"0\" step=\"0.01\">\n" +
+                "\n" +
+                "            <br><br>\n" +
+                "\n" +
+                "            <label>Zoom:</label>\n" +
+                "            <input id=\"zoom\" type=\"number\"\n" +
+                "                   value=\"1\" step=\"0.1\" min=\"0.1\">\n" +
+                "\n" +
+                "            <label>Iterations:</label>\n" +
+                "            <input id=\"iterations\" type=\"number\"\n" +
+                "                   value=\"200\" min=\"20\" max=\"1000\">\n" +
+                "\n" +
+                "            <br><br>\n" +
+                "\n" +
+                "            <button type=\"submit\">\n" +
+                "                Generate Fractal\n" +
+                "            </button>\n" +
+                "\n" +
+                "        </form>\n" +
+                "\n" +
+                "        <div>\n" +
+                "            <img id=\"fractal\"\n" +
+                "                 src=\"/fractal?cx=-0.5&cy=0&zoom=1&iterations=200\">\n" +
+                "        </div>\n" +
+                "\n" +
+                "        <p class=\"info\">\n" +
+                "            Higher zoom and iterations reveal more detail.\n" +
+                "        </p>\n" +
+                "\n" +
+                "    </div>\n" +
+                "\n" +
+                "    <script>\n" +
+                "\n" +
+                "        function generateFractal(event) {\n" +
+                "\n" +
+                "            event.preventDefault();\n" +
+                "\n" +
+                "            let cx = document.getElementById(\"cx\").value;\n" +
+                "            let cy = document.getElementById(\"cy\").value;\n" +
+                "            let zoom = document.getElementById(\"zoom\").value;\n" +
+                "            let iterations =\n" +
+                "                document.getElementById(\"iterations\").value;\n" +
+                "\n" +
+                "            let url =\n" +
+                "                \"/fractal?cx=\" + cx +\n" +
+                "                \"&cy=\" + cy +\n" +
+                "                \"&zoom=\" + zoom +\n" +
+                "                \"&iterations=\" + iterations;\n" +
+                "\n" +
+                "            document.getElementById(\"fractal\").src = url;\n" +
+                "        }\n" +
+                "\n" +
+                "    </script>\n" +
+                "\n" +
+                "</body>\n" +
+                "</html>\n";;
 
         sendResponse(exchange, html, "text/html");
     }
