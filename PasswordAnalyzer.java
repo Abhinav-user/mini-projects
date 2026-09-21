@@ -38,7 +38,7 @@ public class PasswordAnalyzer {
             if (data != null && data.startsWith("password=")) {
                 password = URLDecoder.decode(
                         data.substring(9),
-                        StandardCharsets.UTF_8);
+                        "UTF-8");
             }
         }
 
