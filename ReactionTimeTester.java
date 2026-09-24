@@ -174,11 +174,12 @@ public class ReactionTimeTester {
                 "let reaction =" +
                 "Math.round(performance.now() - startTime);" +
 
+                // FIXED LINE
                 "document.getElementById('time').innerText =" +
-                reaction + ' ms';" +
+                "reaction + ' ms';" +
 
                 "document.getElementById('message').innerText =" +
-                getRating(reaction);" +
+                "getRating(reaction);" +
 
                 "document.getElementById('game').style.background =" +
                 "'#222';" +
