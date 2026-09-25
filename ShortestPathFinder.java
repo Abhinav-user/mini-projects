@@ -69,15 +69,16 @@ public class ShortestPathFinder {
 
                     if (pair.length == 2) {
 
+                        // Fixed for Java 8/11 compatibility
                         String key =
                                 URLDecoder.decode(
                                         pair[0],
-                                        StandardCharsets.UTF_8);
+                                        "UTF-8");
 
                         String value =
                                 URLDecoder.decode(
                                         pair[1],
-                                        StandardCharsets.UTF_8);
+                                        "UTF-8");
 
                         if (key.equals("start"))
                             start = value;
