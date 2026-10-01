@@ -766,7 +766,7 @@ public class Steganography {
 
             return URLDecoder.decode(
                     value,
-                    StandardCharsets.UTF_8
+                    "UTF-8"
             );
 
         } catch (Exception e) {
