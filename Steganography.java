@@ -5,7 +5,9 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Base64;
 
 public class Steganography {
@@ -107,6 +109,7 @@ public class Steganography {
                 "enctype='multipart/form-data'>" +
 
                 "<label>Choose PNG image:</label>" +
+
                 "<input type='file' name='image' " +
                 "accept='.png' required>" +
 
@@ -176,12 +179,6 @@ public class Steganography {
 
             return;
         }
-
-        String boundary =
-                contentType.substring(
-                        contentType.indexOf("boundary=")
-                                + 9
-                );
 
         byte[] body =
                 readBytes(exchange);
@@ -332,6 +329,7 @@ public class Steganography {
                 "<title>Message Hidden</title>" +
 
                 "<style>" +
+
                 "body{" +
                 "font-family:Arial;" +
                 "text-align:center;" +
@@ -768,7 +766,7 @@ public class Steganography {
 
             return URLDecoder.decode(
                     value,
-                    "UTF-8"
+                    StandardCharsets.UTF_8
             );
 
         } catch (Exception e) {
