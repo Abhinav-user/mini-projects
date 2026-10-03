@@ -1,874 +1,948 @@
-
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Base64;
+import java.util.*;
 
-public class Steganography {
+/*
+ * Sudoku Solver & Generator
+ *
+ * Java 8 compatible
+ *
+ * Save as:
+ * SudokuSolver.java
+ *
+ * Compile:
+ * javac SudokuSolver.java
+ *
+ * Run:
+ * java SudokuSolver
+ *
+ * Open:
+ * http://localhost:8080
+ */
+
+public class SudokuSolver {
+
+    static final int SIZE = 9;
+    static final Random random = new Random();
 
     public static void main(String[] args) throws Exception {
 
         HttpServer server = HttpServer.create(
-                new InetSocketAddress(8080), 0
+                new InetSocketAddress(8080),
+                0
         );
 
-        server.createContext("/", Steganography::home);
-        server.createContext("/hide", Steganography::hide);
-        server.createContext("/extract", Steganography::extract);
+        server.createContext("/", SudokuSolver::home);
+        server.createContext("/solve", SudokuSolver::solveRequest);
+        server.createContext("/new", SudokuSolver::newPuzzle);
 
+        server.setExecutor(null);
         server.start();
 
-        System.out.println("================================");
-        System.out.println("       STEGANOGRAPHY TOOL");
-        System.out.println("================================");
-        System.out.println("Open: http://localhost:8080");
+        System.out.println("=================================");
+        System.out.println("      SUDOKU SOLVER & GENERATOR");
+        System.out.println("=================================");
+        System.out.println("Server running at:");
+        System.out.println("http://localhost:8080");
+        System.out.println();
+        System.out.println("Press Ctrl+C to stop.");
     }
 
-    // ================= HOME =================
+    // =========================================================
+    // HOME PAGE
+    // =========================================================
 
     static void home(HttpExchange exchange) throws IOException {
 
-        String html =
-                "<!DOCTYPE html>" +
-                "<html>" +
-                "<head>" +
-                "<title>Steganography Tool</title>" +
+        int[][] puzzle = generatePuzzle();
 
-                "<style>" +
-                "body {" +
-                "font-family: Arial;" +
-                "background: #f2f2f2;" +
-                "margin: 0;" +
-                "padding: 40px;" +
-                "}" +
-
-                ".container {" +
-                "max-width: 700px;" +
-                "margin: auto;" +
-                "}" +
-
-                ".box {" +
-                "background: white;" +
-                "padding: 25px;" +
-                "margin-bottom: 25px;" +
-                "border-radius: 12px;" +
-                "box-shadow: 0 3px 10px #aaa;" +
-                "}" +
-
-                "input, textarea {" +
-                "width: 95%;" +
-                "padding: 12px;" +
-                "margin: 10px 0;" +
-                "font-size: 16px;" +
-                "}" +
-
-                "textarea {" +
-                "height: 100px;" +
-                "resize: none;" +
-                "}" +
-
-                "button {" +
-                "padding: 12px 25px;" +
-                "background: #222;" +
-                "color: white;" +
-                "border: none;" +
-                "border-radius: 6px;" +
-                "cursor: pointer;" +
-                "}" +
-
-                "h1 {" +
-                "text-align: center;" +
-                "}" +
-
-                ".note {" +
-                "color: #666;" +
-                "font-size: 14px;" +
-                "}" +
-
-                "</style>" +
-                "</head>" +
-
-                "<body>" +
-
-                "<div class='container'>" +
-
-                "<h1>🕵️ Steganography Tool</h1>" +
-
-                "<div class='box'>" +
-
-                "<h2>Hide Message</h2>" +
-
-                "<form method='POST' " +
-                "action='/hide' " +
-                "enctype='multipart/form-data'>" +
-
-                "<label>Choose PNG image:</label>" +
-
-                "<input type='file' name='image' " +
-                "accept='.png' required>" +
-
-                "<textarea name='message' " +
-                "placeholder='Enter secret message...' " +
-                "required></textarea>" +
-
-                "<button type='submit'>" +
-                "Hide Message" +
-                "</button>" +
-
-                "</form>" +
-
-                "<p class='note'>" +
-                "Use PNG images for best results." +
-                "</p>" +
-
-                "</div>" +
-
-                "<div class='box'>" +
-
-                "<h2>Extract Message</h2>" +
-
-                "<form method='POST' " +
-                "action='/extract' " +
-                "enctype='multipart/form-data'>" +
-
-                "<label>Choose encoded PNG:</label>" +
-
-                "<input type='file' name='image' " +
-                "accept='.png' required>" +
-
-                "<br>" +
-
-                "<button type='submit'>" +
-                "Extract Message" +
-                "</button>" +
-
-                "</form>" +
-
-                "</div>" +
-
-                "</div>" +
-
-                "</body>" +
-                "</html>";
+        String html = createSudokuPage(puzzle);
 
         sendHTML(exchange, html);
     }
 
-    // ================= HIDE MESSAGE =================
+    // =========================================================
+    // NEW PUZZLE
+    // =========================================================
 
-    static void hide(HttpExchange exchange) throws IOException {
+    static void newPuzzle(HttpExchange exchange) throws IOException {
 
-        String contentType =
-                exchange.getRequestHeaders()
-                        .getFirst("Content-Type");
+        int[][] puzzle = generatePuzzle();
 
-        if (contentType == null ||
-                !contentType.contains("multipart/form-data")) {
-
-            sendError(
-                    exchange,
-                    "Please upload an image."
-            );
-
-            return;
-        }
-
-        byte[] body = readBytes(exchange);
-
-        String bodyText =
-                new String(
-                        body,
-                        StandardCharsets.ISO_8859_1
-                );
-
-        String message =
-                extractField(
-                        bodyText,
-                        "message"
-                );
-
-        byte[] imageData =
-                extractFile(
-                        body,
-                        bodyText,
-                        "image"
-                );
-
-        if (imageData == null) {
-
-            sendError(
-                    exchange,
-                    "Image could not be read."
-            );
-
-            return;
-        }
-
-        if (message == null ||
-                message.length() == 0) {
-
-            sendError(
-                    exchange,
-                    "Message cannot be empty."
-            );
-
-            return;
-        }
-
-        BufferedImage image =
-                ImageIO.read(
-                        new ByteArrayInputStream(imageData)
-                );
-
-        if (image == null) {
-
-            sendError(
-                    exchange,
-                    "Invalid image."
-            );
-
-            return;
-        }
-
-        byte[] messageBytes =
-                message.getBytes(
-                        StandardCharsets.UTF_8
-                );
-
-        /*
-         * Storage format:
-         *
-         * First 32 bits  = message length
-         * Remaining bits = message
-         */
-
-        int totalBits =
-                32 +
-                messageBytes.length * 8;
-
-        int availableBits =
-                image.getWidth() *
-                image.getHeight() *
-                3;
-
-        if (totalBits > availableBits) {
-
-            sendError(
-                    exchange,
-                    "Message is too large for this image."
-            );
-
-            return;
-        }
-
-        int bitPosition = 0;
-
-        // Store message length
-
-        for (int i = 31; i >= 0; i--) {
-
-            int bit =
-                    (messageBytes.length >> i) & 1;
-
-            bitPosition =
-                    writeBit(
-                            image,
-                            bitPosition,
-                            bit
-                    );
-        }
-
-        // Store message
-
-        for (byte b : messageBytes) {
-
-            for (int i = 7; i >= 0; i--) {
-
-                int bit =
-                        (b >> i) & 1;
-
-                bitPosition =
-                        writeBit(
-                                image,
-                                bitPosition,
-                                bit
-                        );
-            }
-        }
-
-        File output =
-                new File(
-                        System.getProperty("java.io.tmpdir"),
-                        "secret_image.png"
-                );
-
-        ImageIO.write(
-                image,
-                "png",
-                output
-        );
-
-        String base64 =
-                Base64.getEncoder()
-                        .encodeToString(
-                                readFile(output)
-                        );
-
-        String html =
-                "<html>" +
-                "<head>" +
-                "<title>Message Hidden</title>" +
-
-                "<style>" +
-
-                "body {" +
-                "font-family: Arial;" +
-                "text-align: center;" +
-                "padding: 50px;" +
-                "background: #f2f2f2;" +
-                "}" +
-
-                ".box {" +
-                "background: white;" +
-                "padding: 30px;" +
-                "max-width: 600px;" +
-                "margin: auto;" +
-                "border-radius: 12px;" +
-                "}" +
-
-                "img {" +
-                "max-width: 100%;" +
-                "margin: 20px;" +
-                "}" +
-
-                "a, button {" +
-                "padding: 12px 20px;" +
-                "background: #222;" +
-                "color: white;" +
-                "text-decoration: none;" +
-                "border: none;" +
-                "border-radius: 5px;" +
-                "}" +
-
-                "</style>" +
-                "</head>" +
-
-                "<body>" +
-
-                "<div class='box'>" +
-
-                "<h1>✅ Message Hidden</h1>" +
-
-                "<p>" +
-                "Your secret message has been " +
-                "hidden inside the image." +
-                "</p>" +
-
-                "<img src='data:image/png;base64," +
-                base64 +
-                "'>" +
-
-                "<br><br>" +
-
-                "<a download='secret_image.png' " +
-                "href='data:image/png;base64," +
-                base64 +
-                "'>" +
-                "Download Image" +
-                "</a>" +
-
-                "<br><br>" +
-
-                "<a href='/'>" +
-                "Back" +
-                "</a>" +
-
-                "</div>" +
-
-                "</body>" +
-                "</html>";
+        String html = createSudokuPage(puzzle);
 
         sendHTML(exchange, html);
     }
 
-    // ================= EXTRACT MESSAGE =================
+    // =========================================================
+    // SOLVE REQUEST
+    // =========================================================
 
-    static void extract(HttpExchange exchange)
-            throws IOException {
+    static void solveRequest(HttpExchange exchange) throws IOException {
 
-        byte[] body =
-                readBytes(exchange);
-
-        String bodyText =
-                new String(
-                        body,
-                        StandardCharsets.ISO_8859_1
-                );
-
-        byte[] imageData =
-                extractFile(
-                        body,
-                        bodyText,
-                        "image"
-                );
-
-        if (imageData == null) {
+        if (!exchange.getRequestMethod().equalsIgnoreCase("POST")) {
 
             sendError(
                     exchange,
-                    "Image could not be read."
+                    "Only POST requests are allowed."
             );
 
             return;
         }
 
-        BufferedImage image =
-                ImageIO.read(
-                        new ByteArrayInputStream(imageData)
-                );
+        // Java 8 compatible way of reading InputStream
+        String body = readRequestBody(exchange.getRequestBody());
 
-        if (image == null) {
-
-            sendError(
-                    exchange,
-                    "Invalid image."
-            );
-
-            return;
-        }
-
-        int availableBits =
-                image.getWidth() *
-                image.getHeight() *
-                3;
-
-        if (availableBits < 32) {
-
-            sendError(
-                    exchange,
-                    "Image is too small to contain a message."
-            );
-
-            return;
-        }
-
-        int bitPosition = 0;
-
-        int messageLength = 0;
-
-        // Read 32-bit length
-
-        for (int i = 31; i >= 0; i--) {
-
-            int bit =
-                    readBit(
-                            image,
-                            bitPosition
-                    );
-
-            bitPosition++;
-
-            messageLength =
-                    messageLength |
-                    (bit << i);
-        }
-
-        int maxLength =
-                (availableBits - 32) / 8;
-
-        if (messageLength < 0 ||
-                messageLength > maxLength) {
-
-            sendError(
-                    exchange,
-                    "No valid hidden message found."
-            );
-
-            return;
-        }
-
-        byte[] messageBytes =
-                new byte[messageLength];
-
-        for (int i = 0;
-             i < messageLength;
-             i++) {
-
-            int value = 0;
-
-            for (int j = 7; j >= 0; j--) {
-
-                int bit =
-                        readBit(
-                                image,
-                                bitPosition
-                        );
-
-                bitPosition++;
-
-                value =
-                        value |
-                        (bit << j);
-            }
-
-            messageBytes[i] =
-                    (byte) value;
-        }
-
-        String message =
-                new String(
-                        messageBytes,
-                        StandardCharsets.UTF_8
-                );
-
-        String html =
-                "<html>" +
-                "<head>" +
-                "<title>Secret Message</title>" +
-
-                "<style>" +
-
-                "body {" +
-                "font-family: Arial;" +
-                "background: #f2f2f2;" +
-                "text-align: center;" +
-                "padding: 50px;" +
-                "}" +
-
-                ".box {" +
-                "background: white;" +
-                "max-width: 600px;" +
-                "margin: auto;" +
-                "padding: 30px;" +
-                "border-radius: 12px;" +
-                "}" +
-
-                ".message {" +
-                "background: #eee;" +
-                "padding: 20px;" +
-                "margin: 20px;" +
-                "font-size: 20px;" +
-                "word-wrap: break-word;" +
-                "}" +
-
-                "a {" +
-                "display: inline-block;" +
-                "padding: 12px 20px;" +
-                "background: #222;" +
-                "color: white;" +
-                "text-decoration: none;" +
-                "border-radius: 5px;" +
-                "}" +
-
-                "</style>" +
-
-                "</head>" +
-
-                "<body>" +
-
-                "<div class='box'>" +
-
-                "<h1>🔓 Secret Message</h1>" +
-
-                "<div class='message'>" +
-                escapeHTML(message) +
-                "</div>" +
-
-                "<a href='/'>" +
-                "Back" +
-                "</a>" +
-
-                "</div>" +
-
-                "</body>" +
-
-                "</html>";
-
-        sendHTML(exchange, html);
-    }
-
-    // ================= WRITE BIT =================
-
-    static int writeBit(
-            BufferedImage image,
-            int position,
-            int bit) {
-
-        int pixelIndex =
-                position / 3;
-
-        int channel =
-                position % 3;
-
-        int x =
-                pixelIndex %
-                image.getWidth();
-
-        int y =
-                pixelIndex /
-                image.getWidth();
-
-        int rgb =
-                image.getRGB(x, y);
-
-        int alpha =
-                (rgb >> 24) & 255;
-
-        int red =
-                (rgb >> 16) & 255;
-
-        int green =
-                (rgb >> 8) & 255;
-
-        int blue =
-                rgb & 255;
-
-        if (channel == 0) {
-
-            red =
-                    (red & 254) | bit;
-
-        } else if (channel == 1) {
-
-            green =
-                    (green & 254) | bit;
-
-        } else {
-
-            blue =
-                    (blue & 254) | bit;
-        }
-
-        int newRGB =
-                (alpha << 24) |
-                (red << 16) |
-                (green << 8) |
-                blue;
-
-        image.setRGB(
-                x,
-                y,
-                newRGB
-        );
-
-        return position + 1;
-    }
-
-    // ================= READ BIT =================
-
-    static int readBit(
-            BufferedImage image,
-            int position) {
-
-        int pixelIndex =
-                position / 3;
-
-        int channel =
-                position % 3;
-
-        int x =
-                pixelIndex %
-                image.getWidth();
-
-        int y =
-                pixelIndex /
-                image.getWidth();
-
-        int rgb =
-                image.getRGB(x, y);
-
-        if (channel == 0) {
-
-            return (rgb >> 16) & 1;
-
-        } else if (channel == 1) {
-
-            return (rgb >> 8) & 1;
-
-        } else {
-
-            return rgb & 1;
-        }
-    }
-
-    // ================= READ BYTES =================
-
-    static byte[] readBytes(
-            HttpExchange exchange)
-            throws IOException {
-
-        InputStream input =
-                exchange.getRequestBody();
-
-        ByteArrayOutputStream output =
-                new ByteArrayOutputStream();
-
-        byte[] buffer =
-                new byte[4096];
-
-        int length;
-
-        while ((length =
-                input.read(buffer)) != -1) {
-
-            output.write(
-                    buffer,
-                    0,
-                    length
-            );
-        }
-
-        input.close();
-
-        return output.toByteArray();
-    }
-
-    // ================= EXTRACT FIELD =================
-
-    static String extractField(
-            String body,
-            String field) {
-
-        String marker =
-                "name=\"" + field + "\"";
-
-        int start =
-                body.indexOf(marker);
-
-        if (start == -1) {
-            return null;
-        }
-
-        start =
-                body.indexOf(
-                        "\r\n\r\n",
-                        start
-                );
-
-        if (start == -1) {
-            return null;
-        }
-
-        start += 4;
-
-        int end =
-                body.indexOf(
-                        "\r\n--",
-                        start
-                );
-
-        if (end == -1) {
-            return null;
-        }
-
-        String value =
-                body.substring(
-                        start,
-                        end
-                );
+        int[][] board = new int[SIZE][SIZE];
 
         try {
 
-            return URLDecoder.decode(
-                    value,
-                    StandardCharsets.UTF_8
+            Map<String, String> values = parseForm(body);
+
+            for (int row = 0; row < SIZE; row++) {
+
+                for (int col = 0; col < SIZE; col++) {
+
+                    String key = "cell_" + row + "_" + col;
+
+                    String value = values.get(key);
+
+                    if (value == null || value.trim().isEmpty()) {
+
+                        board[row][col] = 0;
+
+                    } else {
+
+                        int number = Integer.parseInt(
+                                value.trim()
+                        );
+
+                        if (number < 1 || number > 9) {
+
+                            sendError(
+                                    exchange,
+                                    "Each Sudoku cell must contain a number from 1 to 9."
+                            );
+
+                            return;
+                        }
+
+                        board[row][col] = number;
+                    }
+                }
+            }
+
+        } catch (NumberFormatException e) {
+
+            sendError(
+                    exchange,
+                    "Please enter only numbers from 1 to 9."
             );
 
-        } catch (Exception e) {
-
-            return value;
-        }
-    }
-
-    // ================= EXTRACT FILE =================
-
-    static byte[] extractFile(
-            byte[] body,
-            String text,
-            String field) {
-
-        String marker =
-                "name=\"" +
-                field +
-                "\"";
-
-        int header =
-                text.indexOf(marker);
-
-        if (header == -1) {
-            return null;
+            return;
         }
 
-        int start =
-                text.indexOf(
-                        "\r\n\r\n",
-                        header
-                );
+        // Check whether the entered board is valid.
+        if (!isValidBoard(board)) {
 
-        if (start == -1) {
-            return null;
+            String html = createResultPage(
+                    board,
+                    "Invalid Sudoku",
+                    "The Sudoku contains duplicate numbers in a row, column, or 3x3 box."
+            );
+
+            sendHTML(exchange, html);
+
+            return;
         }
 
-        start += 4;
+        // Make a copy before solving.
+        int[][] solved = copyBoard(board);
 
-        int end =
-                text.indexOf(
-                        "\r\n--",
-                        start
-                );
+        // Try solving the Sudoku.
+        if (!solveSudoku(solved)) {
 
-        if (end == -1) {
-            return null;
+            String html = createResultPage(
+                    board,
+                    "No Solution",
+                    "This Sudoku puzzle does not have a valid solution."
+            );
+
+            sendHTML(exchange, html);
+
+            return;
         }
 
-        return Arrays.copyOfRange(
-                body,
-                start,
-                end
+        String html = createResultPage(
+                solved,
+                "Sudoku Solved!",
+                "The puzzle was successfully solved using backtracking."
         );
+
+        sendHTML(exchange, html);
     }
 
-    // ================= READ FILE =================
+    // =========================================================
+    // SUDOKU SOLVER - BACKTRACKING
+    // =========================================================
 
-    static byte[] readFile(File file)
+    static boolean solveSudoku(int[][] board) {
+
+        int[] empty = findEmptyCell(board);
+
+        // No empty cells = solved.
+        if (empty == null) {
+            return true;
+        }
+
+        int row = empty[0];
+        int col = empty[1];
+
+        List<Integer> numbers = new ArrayList<Integer>();
+
+        for (int number = 1; number <= 9; number++) {
+
+            numbers.add(number);
+        }
+
+        // Randomize numbers so generated puzzles differ.
+        Collections.shuffle(numbers, random);
+
+        for (int number : numbers) {
+
+            if (isSafe(board, row, col, number)) {
+
+                board[row][col] = number;
+
+                if (solveSudoku(board)) {
+                    return true;
+                }
+
+                // Backtrack.
+                board[row][col] = 0;
+            }
+        }
+
+        return false;
+    }
+
+    // =========================================================
+    // FIND EMPTY CELL
+    // =========================================================
+
+    static int[] findEmptyCell(int[][] board) {
+
+        for (int row = 0; row < SIZE; row++) {
+
+            for (int col = 0; col < SIZE; col++) {
+
+                if (board[row][col] == 0) {
+
+                    return new int[] {
+                            row,
+                            col
+                    };
+                }
+            }
+        }
+
+        return null;
+    }
+
+    // =========================================================
+    // CHECK IF NUMBER IS SAFE
+    // =========================================================
+
+    static boolean isSafe(
+            int[][] board,
+            int row,
+            int col,
+            int number
+    ) {
+
+        // Check row.
+        for (int c = 0; c < SIZE; c++) {
+
+            if (board[row][c] == number) {
+                return false;
+            }
+        }
+
+        // Check column.
+        for (int r = 0; r < SIZE; r++) {
+
+            if (board[r][col] == number) {
+                return false;
+            }
+        }
+
+        // Find 3x3 box.
+        int boxRow = (row / 3) * 3;
+        int boxCol = (col / 3) * 3;
+
+        for (int r = boxRow; r < boxRow + 3; r++) {
+
+            for (int c = boxCol; c < boxCol + 3; c++) {
+
+                if (board[r][c] == number) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    // =========================================================
+    // VALIDATE ENTIRE BOARD
+    // =========================================================
+
+    static boolean isValidBoard(int[][] board) {
+
+        // Check rows.
+        for (int row = 0; row < SIZE; row++) {
+
+            boolean[] seen = new boolean[10];
+
+            for (int col = 0; col < SIZE; col++) {
+
+                int number = board[row][col];
+
+                if (number == 0) {
+                    continue;
+                }
+
+                if (seen[number]) {
+                    return false;
+                }
+
+                seen[number] = true;
+            }
+        }
+
+        // Check columns.
+        for (int col = 0; col < SIZE; col++) {
+
+            boolean[] seen = new boolean[10];
+
+            for (int row = 0; row < SIZE; row++) {
+
+                int number = board[row][col];
+
+                if (number == 0) {
+                    continue;
+                }
+
+                if (seen[number]) {
+                    return false;
+                }
+
+                seen[number] = true;
+            }
+        }
+
+        // Check 3x3 boxes.
+        for (int boxRow = 0; boxRow < SIZE; boxRow += 3) {
+
+            for (int boxCol = 0; boxCol < SIZE; boxCol += 3) {
+
+                boolean[] seen = new boolean[10];
+
+                for (
+                        int row = boxRow;
+                        row < boxRow + 3;
+                        row++
+                ) {
+
+                    for (
+                            int col = boxCol;
+                            col < boxCol + 3;
+                            col++
+                    ) {
+
+                        int number = board[row][col];
+
+                        if (number == 0) {
+                            continue;
+                        }
+
+                        if (seen[number]) {
+                            return false;
+                        }
+
+                        seen[number] = true;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    // =========================================================
+    // GENERATE SUDOKU PUZZLE
+    // =========================================================
+
+    static int[][] generatePuzzle() {
+
+        int[][] solved = new int[SIZE][SIZE];
+
+        // Generate a complete valid Sudoku.
+        solveSudoku(solved);
+
+        // Copy it.
+        int[][] puzzle = copyBoard(solved);
+
+        // Create random cell positions.
+        List<Integer> positions = new ArrayList<Integer>();
+
+        for (int i = 0; i < 81; i++) {
+
+            positions.add(i);
+        }
+
+        Collections.shuffle(positions, random);
+
+        /*
+         * Remove cells while keeping a unique solution.
+         */
+        for (int position : positions) {
+
+            int row = position / 9;
+            int col = position % 9;
+
+            int backup = puzzle[row][col];
+
+            puzzle[row][col] = 0;
+
+            int[][] test = copyBoard(puzzle);
+
+            if (!hasUniqueSolution(test)) {
+
+                puzzle[row][col] = backup;
+            }
+        }
+
+        return puzzle;
+    }
+
+    // =========================================================
+    // CHECK UNIQUE SOLUTION
+    // =========================================================
+
+    static boolean hasUniqueSolution(int[][] board) {
+
+        int[][] copy = copyBoard(board);
+
+        int[] count = new int[] {
+                0
+        };
+
+        countSolutions(copy, count);
+
+        return count[0] == 1;
+    }
+
+    static void countSolutions(
+            int[][] board,
+            int[] count
+    ) {
+
+        // We only need to know if there is more than one.
+        if (count[0] > 1) {
+            return;
+        }
+
+        int[] empty = findEmptyCell(board);
+
+        // Found a complete solution.
+        if (empty == null) {
+
+            count[0]++;
+
+            return;
+        }
+
+        int row = empty[0];
+        int col = empty[1];
+
+        for (int number = 1; number <= 9; number++) {
+
+            if (isSafe(board, row, col, number)) {
+
+                board[row][col] = number;
+
+                countSolutions(board, count);
+
+                board[row][col] = 0;
+
+                if (count[0] > 1) {
+                    return;
+                }
+            }
+        }
+    }
+
+    // =========================================================
+    // COPY BOARD
+    // =========================================================
+
+    static int[][] copyBoard(int[][] original) {
+
+        int[][] copy = new int[SIZE][SIZE];
+
+        for (int row = 0; row < SIZE; row++) {
+
+            copy[row] = Arrays.copyOf(
+                    original[row],
+                    SIZE
+            );
+        }
+
+        return copy;
+    }
+
+    // =========================================================
+    // CREATE SUDOKU HTML PAGE
+    // =========================================================
+
+    static String createSudokuPage(int[][] puzzle) {
+
+        StringBuilder html = new StringBuilder();
+
+        html.append("<!DOCTYPE html>");
+        html.append("<html>");
+        html.append("<head>");
+
+        html.append("<meta charset=\"UTF-8\">");
+
+        html.append("<title>Sudoku Solver</title>");
+
+        html.append("<style>");
+
+        html.append("body {");
+        html.append("font-family: Arial, sans-serif;");
+        html.append("background: #f2f2f2;");
+        html.append("text-align: center;");
+        html.append("margin: 0;");
+        html.append("padding: 30px;");
+        html.append("}");
+
+        html.append("h1 {");
+        html.append("margin-bottom: 5px;");
+        html.append("}");
+
+        html.append(".subtitle {");
+        html.append("color: #666;");
+        html.append("margin-bottom: 25px;");
+        html.append("}");
+
+        html.append(".sudoku {");
+        html.append("border-collapse: collapse;");
+        html.append("margin: auto;");
+        html.append("background: white;");
+        html.append("box-shadow: 0 5px 20px rgba(0,0,0,0.15);");
+        html.append("}");
+
+        html.append(".sudoku td {");
+        html.append("width: 55px;");
+        html.append("height: 55px;");
+        html.append("padding: 0;");
+        html.append("border: 1px solid #999;");
+        html.append("}");
+
+        html.append(".sudoku input {");
+        html.append("width: 100%;");
+        html.append("height: 100%;");
+        html.append("box-sizing: border-box;");
+        html.append("border: none;");
+        html.append("text-align: center;");
+        html.append("font-size: 24px;");
+        html.append("outline: none;");
+        html.append("}");
+
+        html.append(".sudoku input:focus {");
+        html.append("background: #e8f0ff;");
+        html.append("}");
+
+        html.append(".fixed {");
+        html.append("background: #eeeeee;");
+        html.append("font-weight: bold;");
+        html.append("font-size: 24px;");
+        html.append("height: 55px;");
+        html.append("line-height: 55px;");
+        html.append("}");
+
+        html.append(".right-border {");
+        html.append("border-right: 3px solid black !important;");
+        html.append("}");
+
+        html.append(".bottom-border {");
+        html.append("border-bottom: 3px solid black !important;");
+        html.append("}");
+
+        html.append("button {");
+        html.append("margin: 20px 8px;");
+        html.append("padding: 12px 25px;");
+        html.append("font-size: 16px;");
+        html.append("border: none;");
+        html.append("border-radius: 6px;");
+        html.append("cursor: pointer;");
+        html.append("}");
+
+        html.append(".solve {");
+        html.append("background: #333;");
+        html.append("color: white;");
+        html.append("}");
+
+        html.append(".new {");
+        html.append("background: #ddd;");
+        html.append("color: black;");
+        html.append("}");
+
+        html.append("button:hover {");
+        html.append("opacity: 0.8;");
+        html.append("}");
+
+        html.append(".instructions {");
+        html.append("margin-top: 20px;");
+        html.append("color: #555;");
+        html.append("}");
+
+        html.append("</style>");
+
+        html.append("</head>");
+
+        html.append("<body>");
+
+        html.append("<h1>Sudoku Solver</h1>");
+
+        html.append(
+                "<div class=\"subtitle\">" +
+                "Enter numbers into the empty cells and press Solve." +
+                "</div>"
+        );
+
+        html.append(
+                "<form method=\"POST\" action=\"/solve\">"
+        );
+
+        html.append("<table class=\"sudoku\">");
+
+        for (int row = 0; row < SIZE; row++) {
+
+            html.append("<tr>");
+
+            for (int col = 0; col < SIZE; col++) {
+
+                String classes = "";
+
+                if (col == 2 || col == 5) {
+                    classes += " right-border";
+                }
+
+                if (row == 2 || row == 5) {
+                    classes += " bottom-border";
+                }
+
+                html.append("<td class=\"");
+                html.append(classes);
+                html.append("\">");
+
+                int value = puzzle[row][col];
+
+                if (value != 0) {
+
+                    html.append(
+                            "<div class=\"fixed\">"
+                    );
+
+                    html.append(value);
+
+                    html.append("</div>");
+
+                } else {
+
+                    html.append(
+                            "<input " +
+                            "type=\"text\" " +
+                            "name=\"cell_" +
+                            row +
+                            "_" +
+                            col +
+                            "\" " +
+                            "maxlength=\"1\" " +
+                            "inputmode=\"numeric\">"
+                    );
+                }
+
+                html.append("</td>");
+            }
+
+            html.append("</tr>");
+        }
+
+        html.append("</table>");
+
+        html.append(
+                "<button class=\"solve\" type=\"submit\">" +
+                "Solve Sudoku" +
+                "</button>"
+        );
+
+        html.append("</form>");
+
+        html.append("<a href=\"/new\">");
+
+        html.append(
+                "<button class=\"new\" type=\"button\">" +
+                "New Puzzle" +
+                "</button>"
+        );
+
+        html.append("</a>");
+
+        html.append(
+                "<div class=\"instructions\">" +
+                "Sudoku rules: every row, column and 3x3 box " +
+                "must contain numbers 1-9 exactly once." +
+                "</div>"
+        );
+
+        html.append("</body>");
+
+        html.append("</html>");
+
+        return html.toString();
+    }
+
+    // =========================================================
+    // CREATE RESULT PAGE
+    // =========================================================
+
+    static String createResultPage(
+            int[][] board,
+            String title,
+            String message
+    ) {
+
+        StringBuilder html = new StringBuilder();
+
+        html.append("<!DOCTYPE html>");
+        html.append("<html>");
+        html.append("<head>");
+
+        html.append("<meta charset=\"UTF-8\">");
+
+        html.append("<title>Sudoku Result</title>");
+
+        html.append("<style>");
+
+        html.append("body {");
+        html.append("font-family: Arial, sans-serif;");
+        html.append("background: #f2f2f2;");
+        html.append("text-align: center;");
+        html.append("padding: 30px;");
+        html.append("}");
+
+        html.append("h1 {");
+        html.append("margin-bottom: 5px;");
+        html.append("}");
+
+        html.append(".message {");
+        html.append("color: #555;");
+        html.append("margin-bottom: 25px;");
+        html.append("}");
+
+        html.append("table {");
+        html.append("border-collapse: collapse;");
+        html.append("margin: auto;");
+        html.append("background: white;");
+        html.append("box-shadow: 0 5px 20px rgba(0,0,0,0.15);");
+        html.append("}");
+
+        html.append("td {");
+        html.append("width: 55px;");
+        html.append("height: 55px;");
+        html.append("border: 1px solid #999;");
+        html.append("font-size: 24px;");
+        html.append("font-weight: bold;");
+        html.append("}");
+
+        html.append(".right-border {");
+        html.append("border-right: 3px solid black;");
+        html.append("}");
+
+        html.append(".bottom-border {");
+        html.append("border-bottom: 3px solid black;");
+        html.append("}");
+
+        html.append("button {");
+        html.append("margin-top: 25px;");
+        html.append("padding: 12px 25px;");
+        html.append("font-size: 16px;");
+        html.append("border: none;");
+        html.append("border-radius: 6px;");
+        html.append("cursor: pointer;");
+        html.append("background: #333;");
+        html.append("color: white;");
+        html.append("}");
+
+        html.append("</style>");
+
+        html.append("</head>");
+
+        html.append("<body>");
+
+        html.append("<h1>");
+
+        html.append(
+                escapeHTML(title)
+        );
+
+        html.append("</h1>");
+
+        html.append("<div class=\"message\">");
+
+        html.append(
+                escapeHTML(message)
+        );
+
+        html.append("</div>");
+
+        html.append("<table>");
+
+        for (int row = 0; row < SIZE; row++) {
+
+            html.append("<tr>");
+
+            for (int col = 0; col < SIZE; col++) {
+
+                String classes = "";
+
+                if (col == 2 || col == 5) {
+                    classes += "right-border ";
+                }
+
+                if (row == 2 || row == 5) {
+                    classes += "bottom-border ";
+                }
+
+                html.append("<td class=\"");
+                html.append(classes);
+                html.append("\">");
+
+                html.append(board[row][col]);
+
+                html.append("</td>");
+            }
+
+            html.append("</tr>");
+        }
+
+        html.append("</table>");
+
+        html.append("<br>");
+
+        html.append("<a href=\"/\">");
+
+        html.append(
+                "<button>New Sudoku</button>"
+        );
+
+        html.append("</a>");
+
+        html.append("</body>");
+
+        html.append("</html>");
+
+        return html.toString();
+    }
+
+    // =========================================================
+    // READ REQUEST BODY - JAVA 8 COMPATIBLE
+    // =========================================================
+
+    static String readRequestBody(InputStream input)
             throws IOException {
 
         ByteArrayOutputStream output =
                 new ByteArrayOutputStream();
 
-        FileInputStream input =
-                new FileInputStream(file);
+        byte[] buffer = new byte[1024];
 
-        byte[] buffer =
-                new byte[4096];
+        int bytesRead;
 
-        int length;
-
-        while ((length =
-                input.read(buffer)) != -1) {
+        while ((bytesRead = input.read(buffer)) != -1) {
 
             output.write(
                     buffer,
                     0,
-                    length
+                    bytesRead
             );
         }
 
-        input.close();
-
-        return output.toByteArray();
+        return new String(
+                output.toByteArray(),
+                StandardCharsets.UTF_8
+        );
     }
 
-    // ================= HTML ESCAPE =================
+    // =========================================================
+    // FORM PARSER
+    // =========================================================
+
+    static Map<String, String> parseForm(String body)
+            throws UnsupportedEncodingException {
+
+        Map<String, String> result =
+                new HashMap<String, String>();
+
+        if (body == null || body.isEmpty()) {
+            return result;
+        }
+
+        String[] pairs = body.split("&");
+
+        for (String pair : pairs) {
+
+            String[] parts = pair.split("=", 2);
+
+            String key = URLDecoder.decode(
+                    parts[0],
+                    "UTF-8"
+            );
+
+            String value = "";
+
+            if (parts.length > 1) {
+
+                value = URLDecoder.decode(
+                        parts[1],
+                        "UTF-8"
+                );
+            }
+
+            result.put(key, value);
+        }
+
+        return result;
+    }
+
+    // =========================================================
+    // HTML ESCAPING
+    // =========================================================
 
     static String escapeHTML(String text) {
+
+        if (text == null) {
+            return "";
+        }
 
         return text
                 .replace("&", "&amp;")
@@ -878,17 +952,18 @@ public class Steganography {
                 .replace("'", "&#39;");
     }
 
-    // ================= SEND HTML =================
+    // =========================================================
+    // SEND HTML
+    // =========================================================
 
     static void sendHTML(
             HttpExchange exchange,
-            String html)
-            throws IOException {
+            String html
+    ) throws IOException {
 
-        byte[] response =
-                html.getBytes(
-                        StandardCharsets.UTF_8
-                );
+        byte[] data = html.getBytes(
+                StandardCharsets.UTF_8
+        );
 
         exchange.getResponseHeaders().set(
                 "Content-Type",
@@ -897,43 +972,83 @@ public class Steganography {
 
         exchange.sendResponseHeaders(
                 200,
-                response.length
+                data.length
         );
 
         OutputStream output =
                 exchange.getResponseBody();
 
-        output.write(response);
+        try {
 
-        output.close();
+            output.write(data);
+
+        } finally {
+
+            output.close();
+        }
     }
 
-    // ================= ERROR =================
+    // =========================================================
+    // SEND ERROR
+    // =========================================================
 
     static void sendError(
             HttpExchange exchange,
-            String message)
-            throws IOException {
+            String message
+    ) throws IOException {
 
         String html =
+                "<!DOCTYPE html>" +
                 "<html>" +
-                "<body style='" +
+                "<head>" +
+                "<meta charset=\"UTF-8\">" +
+                "<title>Sudoku Error</title>" +
+
+                "<style>" +
+
+                "body {" +
                 "font-family: Arial;" +
                 "text-align: center;" +
-                "padding: 50px;" +
-                "'>" +
+                "padding: 60px;" +
+                "background: #f2f2f2;" +
+                "}" +
 
-                "<h2>❌ " +
+                ".error {" +
+                "background: white;" +
+                "display: inline-block;" +
+                "padding: 30px;" +
+                "border-radius: 10px;" +
+                "box-shadow: 0 5px 20px rgba(0,0,0,0.15);" +
+                "}" +
+
+                "button {" +
+                "padding: 10px 20px;" +
+                "margin-top: 20px;" +
+                "cursor: pointer;" +
+                "}" +
+
+                "</style>" +
+
+                "</head>" +
+
+                "<body>" +
+
+                "<div class=\"error\">" +
+
+                "<h2>Sudoku Error</h2>" +
+
+                "<p>" +
                 escapeHTML(message) +
-                "</h2>" +
+                "</p>" +
 
-                "<br>" +
-
-                "<a href='/'>" +
-                "Go Back" +
+                "<a href=\"/\">" +
+                "<button>Back to Sudoku</button>" +
                 "</a>" +
 
+                "</div>" +
+
                 "</body>" +
+
                 "</html>";
 
         sendHTML(exchange, html);
