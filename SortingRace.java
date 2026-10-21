@@ -4,7 +4,6 @@ import com.sun.net.httpserver.HttpExchange;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 public class SortingRace {
     static String page() {
